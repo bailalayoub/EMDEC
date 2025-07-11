@@ -1,56 +1,45 @@
 import argparse
-import os
 import tensorflow as tf
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
-from tensorflow.keras.layers import (Conv2D, MaxPooling2D, Dropout, Flatten,
-                                     Dense, BatchNormalization)
+from tensorflow.keras.layers import Dropout, Flatten, Dense, BatchNormalization
 from tensorflow.keras.models import Sequential
-from tensorflow.keras import regularizers
+from tensorflow.keras.applications import MobileNetV2
 
 
 def build_model(input_shape=(48, 48, 3)):
+    """Build a CNN model using MobileNetV2 as a feature extractor."""
+    base_model = MobileNetV2(
+        input_shape=input_shape,
+        include_top=False,
+        weights="imagenet",
+    )
+    base_model.trainable = False
+
     model = Sequential()
-    model.add(Conv2D(32, (3, 3), padding='same', activation='relu',
-                     input_shape=input_shape))
-    model.add(Conv2D(64, (3, 3), padding='same', activation='relu'))
-    model.add(BatchNormalization())
-    model.add(MaxPooling2D(pool_size=(2, 2)))
-    model.add(Dropout(0.25))
-
-    model.add(Conv2D(128, (5, 5), padding='same', activation='relu'))
-    model.add(BatchNormalization())
-    model.add(MaxPooling2D(pool_size=(2, 2)))
-    model.add(Dropout(0.25))
-
-    model.add(Conv2D(512, (3, 3), padding='same', activation='relu',
-                     kernel_regularizer=regularizers.l2(0.01)))
-    model.add(BatchNormalization())
-    model.add(MaxPooling2D(pool_size=(2, 2)))
-    model.add(Dropout(0.25))
-
+    model.add(base_model)
     model.add(Flatten())
-    model.add(Dense(256, activation='relu'))
+    model.add(Dense(256, activation="relu"))
     model.add(BatchNormalization())
-    model.add(Dropout(0.25))
-
-    model.add(Dense(512, activation='relu'))
-    model.add(BatchNormalization())
-    model.add(Dropout(0.25))
-
-    model.add(Dense(7, activation='softmax'))
+    model.add(Dropout(0.5))
+    model.add(Dense(7, activation="softmax"))
 
     model.compile(
-        optimizer='adam',
-        loss='categorical_crossentropy',
-        metrics=['accuracy']
+        optimizer=tf.keras.optimizers.Adam(learning_rate=1e-4),
+        loss="categorical_crossentropy",
+        metrics=["accuracy"],
     )
     return model
 
 
 def main(args):
-    train_gen = ImageDataGenerator(rescale=1./255,
-                                   horizontal_flip=True,
-                                   vertical_flip=True)
+    train_gen = ImageDataGenerator(
+        rescale=1.0 / 255,
+        rotation_range=15,
+        width_shift_range=0.1,
+        height_shift_range=0.1,
+        zoom_range=0.1,
+        horizontal_flip=True,
+    )
     train_ds = train_gen.flow_from_directory(
         directory=args.train_dir,
         target_size=(48, 48),
@@ -65,10 +54,16 @@ def main(args):
     )
 
     model = build_model()
+    callbacks = [
+        tf.keras.callbacks.EarlyStopping(patience=3, restore_best_weights=True),
+        tf.keras.callbacks.ReduceLROnPlateau(patience=2, factor=0.5),
+    ]
+
     history = model.fit(
         train_ds,
         validation_data=val_ds,
-        epochs=args.epochs
+        epochs=args.epochs,
+        callbacks=callbacks,
     )
     model.save(args.output)
 
