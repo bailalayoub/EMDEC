@@ -5,11 +5,11 @@ This project employs a Convolutional Neural Network (CNN) for real-time emotion 
 
 1. **Dataset:** The model is trained on the FER-2013 dataset, consisting of grayscale face images categorized into seven emotions (Angry, Disgust, Fear, Happy, Sad, Surprise, Neutral).
 
-2. **Model Architecture:** A CNN architecture is utilized for its effectiveness in image classification tasks. The model includes convolutional layers for feature extraction, batch normalization to improve convergence, max-pooling for down-sampling, and dense layers for classification.
+2. **Model Architecture:** The training script now leverages **MobileNetV2** pre-trained on ImageNet as a feature extractor. A lightweight dense classifier is stacked on top and fine-tuned for the FER-2013 dataset, allowing the model to learn richer features than a network trained from scratch.
 
-3. **Data Preprocessing:** Images are preprocessed by resizing to a standardized input size, normalizing pixel values, and augmenting the dataset through horizontal and vertical flips.
+3. **Data Preprocessing:** Images are resized to a standard input size, normalized to the `[0, 1]` range, and augmented using random rotations, shifts, zooming and horizontal flips to improve generalization.
 
-4. **Training:** The model is trained on the preprocessed dataset using the Adam optimizer and categorical crossentropy loss function. Training involves multiple epochs to learn the patterns and features associated with different emotions.
+4. **Training:** The updated training script uses early stopping and learning-rate reduction on plateau while optimizing with Adam. These callbacks help the model converge to higher accuracy with fewer epochs.
 
 5. **Real-Time Detection:** The trained model is then employed for real-time emotion detection through a webcam. Each frame from the webcam feed is processed, converted to grayscale, preprocessed, and fed into the model for prediction.
 
