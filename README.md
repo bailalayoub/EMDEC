@@ -47,3 +47,46 @@ This project combines the robustness of CNNs with real-time webcam usage, making
     - Purpose: Visual confirmation of the model's performance in detecting surprise emotions.
 
 This repository contains the necessary components for training the model, evaluating its performance, and utilizing it for real-time emotion detection using a webcam. The screenshots provide visual validation of the model's ability to recognize various emotions.
+
+## Usage
+
+The repository now includes Python scripts for training, running the webcam detector,
+and a small Flask web application.
+
+### Training
+
+Provide paths to your training and validation directories containing the FER-2013
+images arranged by class:
+
+```bash
+python3 train.py --train-dir /path/to/train --val-dir /path/to/val --epochs 10 --output model.h5
+```
+
+### Command Line Detection
+
+Run real-time detection from the terminal with:
+
+```bash
+python3 detect.py --model model.h5
+```
+
+Press `q` to quit the webcam window.
+
+### Flask Application
+
+To test the model in a browser, launch the Flask server:
+
+```bash
+python3 app.py --model model.h5
+```
+
+Then open `http://localhost:5000` in your browser to see the live feed with
+predicted emotions.
+
+### Dependencies
+
+Install required packages using:
+
+```bash
+pip3 install -r requirements.txt
+```
